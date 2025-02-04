@@ -3,7 +3,7 @@
 /**
  * Plugin Name: WS Form to Trello Automation
  * Description: Creates Trello cards from WS Form submissions.
- * Version: 1.0.0
+ * Version: 1.0.1
  * Author: Hamza Mehmood
  */
 
@@ -11,7 +11,7 @@
 if (!defined('ABSPATH')) exit;
 
 // Hook into WS Form submission
-add_action('wsf_after_save_form_data', 'create_trello_card_from_wsform', 10, 2);
+add_action('wsf_submit_post_complete', 'create_trello_card_from_wsform', 10, 2);
 
 /**
  * Create a Trello card from a WS Form submission.
@@ -19,26 +19,20 @@ add_action('wsf_after_save_form_data', 'create_trello_card_from_wsform', 10, 2);
  * @param int $submission_id The WS Form submission ID.
  * @param int $form_id The WS Form ID.
  */
-function create_trello_card_from_wsform($submission_id, $form_id)
+function create_trello_card_from_wsform($submit)
 {
     // Trello API credentials
-    $api_key = 'your_trello_api_key';
-    $token = 'your_trello_token';
-    $list_id = 'your_trello_list_id'; // Replace with your Trello List ID
+    $api_key = '';
+    $token = '';
+    $list_id = ''; // Replace with your Trello List ID
 
     // Get WS Form submission data
-    $submission_data = wsf_get_submission($submission_id);
-    if (!$submission_data || empty($submission_data['fields'])) {
-        error_log('Failed to retrieve WS Form submission data.');
-        return;
-    }
+
+
 
     // Prepare the Trello card details
-    $card_name = 'New Submission from WS Form'; // Card title
-    $card_description = '';
-    foreach ($submission_data['fields'] as $field) {
-        $card_description .= $field['label'] . ': ' . $field['value'] . "\n";
-    }
+    $card_name = 'New Submission from WS Form with field'; // Card title
+    $card_detail = wsf_field_get_object($submit, 184);
 
     // Trello API endpoint
     $url = "https://api.trello.com/1/cards";
@@ -49,10 +43,10 @@ function create_trello_card_from_wsform($submission_id, $form_id)
         'token' => $token,
         'idList' => $list_id,
         'name' => $card_name,
-        'desc' => $card_description,
+        'desc' => $card_detail,
     ];
 
-    // Make API request to Trello
+    // Make API request to Trello   
     $response = wp_remote_post($url, [
         'body' => $body,
     ]);
